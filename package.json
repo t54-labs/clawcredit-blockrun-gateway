@@ -6,8 +6,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "clawcredit-blockrun-gateway": "./dist/cli.js",
-    "clawcredit-blockrun-sdk": "./dist/cli.js"
+    "clawcredit-blockrun-gateway": "dist/cli.js",
+    "clawcredit-blockrun-sdk": "dist/cli.js"
   },
   "exports": {
     ".": {
