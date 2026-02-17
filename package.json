@@ -1,6 +1,6 @@
 {
   "name": "@t54-labs/clawcredit-blockrun-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "SDK and standalone OpenAI-compatible gateway for BlockRun inference paid via claw.credit",
   "type": "module",
   "main": "dist/index.js",
