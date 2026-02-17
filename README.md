@@ -54,10 +54,10 @@ bash scripts/setup-openclaw-clawcredit-gateway.sh --token claw_xxx
 This will:
 
 - build/start the standalone gateway in background
+- fetch latest real model IDs from `https://blockrun.ai/api/v1/models`
 - patch OpenClaw provider config (`blockruncc` -> `http://127.0.0.1:3402/v1`)
-- expose only real upstream model IDs (`gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4`, `claude-haiku-4.5`)
 - restart OpenClaw gateway
-- set active model to `blockruncc/gpt-4o` (default)
+- set active model to `blockruncc/openai/gpt-4o` (default)
 
 Dry-run first:
 
@@ -71,7 +71,7 @@ Then call:
 curl -sS http://127.0.0.1:3402/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
-    "model":"gpt-4o",
+    "model":"openai/gpt-4o",
     "messages":[{"role":"user","content":"hi"}],
     "max_tokens":64
   }'
@@ -92,12 +92,21 @@ curl -sS http://127.0.0.1:3402/v1/chat/completions \
 
 ## Supported models
 
-This gateway intentionally exposes only real upstream model IDs (no meta models):
+This gateway syncs model IDs from `BLOCKRUN_API_BASE/v1/models` (no meta models).
+Examples include:
 
-- `gpt-4o`
-- `gpt-4o-mini`
-- `claude-sonnet-4`
-- `claude-haiku-4.5`
+- `openai/gpt-4o`
+- `openai/gpt-5.2`
+- `anthropic/claude-opus-4.5`
+- `anthropic/claude-sonnet-4`
+- `google/gemini-3-pro-preview`
+- `moonshot/kimi-k2.5`
+
+List current synced models in OpenClaw:
+
+```bash
+openclaw models show | rg '^  blockruncc/'
+```
 
 ## Endpoints
 

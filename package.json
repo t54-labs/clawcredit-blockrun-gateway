@@ -26,7 +26,7 @@
     "dev": "tsup --watch",
     "start": "node dist/cli.js",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx test/gateway-integration.ts"
+    "test": "npx tsx test/openclaw-model-sync.ts && npx tsx test/gateway-integration.ts"
   },
   "keywords": [
     "clawcredit",

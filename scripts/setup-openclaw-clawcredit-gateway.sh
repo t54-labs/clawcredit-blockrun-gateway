@@ -4,7 +4,7 @@ set -euo pipefail
 DEFAULT_GATEWAY_DIR="/tmp/clawcredit-blockrun-gateway"
 DEFAULT_PORT="3402"
 DEFAULT_PROVIDER_ID="blockruncc"
-DEFAULT_MODEL_ID="gpt-4o"
+DEFAULT_MODEL_ID="openai/gpt-4o"
 DEFAULT_HOST="127.0.0.1"
 DEFAULT_BLOCKRUN_API_BASE="https://blockrun.ai/api"
 DEFAULT_CLAWCREDIT_BASE_URL="https://api.claw.credit"
@@ -31,7 +31,7 @@ Options:
   --port <port>           Gateway port (default: 3402)
   --host <host>           Gateway host bind (default: 127.0.0.1)
   --provider <id>         OpenClaw provider id (default: blockruncc)
-  --model <id>            Model id to set active (default: gpt-4o)
+  --model <id>            Model id to set active (default: openai/gpt-4o)
   --profile <name>        OpenClaw profile for CLI commands
   --state-dir <path>      OpenClaw state dir override
   --blockrun-api <url>    BLOCKRUN_API_BASE (default: https://blockrun.ai/api)
@@ -206,15 +206,6 @@ if [[ -z "$CLAWCREDIT_ASSET" ]]; then
   fi
 fi
 
-case "$MODEL_ID" in
-  gpt-4o|gpt-4o-mini|claude-sonnet-4|claude-haiku-4.5)
-    ;;
-  *)
-    warn "Unsupported model '$MODEL_ID'; falling back to '$DEFAULT_MODEL_ID'"
-    MODEL_ID="$DEFAULT_MODEL_ID"
-    ;;
-esac
-
 STATE_DIR="$(resolve_state_dir "$OPENCLAW_STATE_DIR_ARG" "$OPENCLAW_PROFILE")"
 OPENCLAW_JSON="$STATE_DIR/openclaw.json"
 
@@ -236,7 +227,7 @@ log "  gateway dir: $GATEWAY_DIR"
 log "  gateway listen: ${HOST}:${PORT}"
 log "  OpenClaw state dir: $STATE_DIR"
 log "  provider/model: ${PROVIDER_ID}/${MODEL_ID}"
-log "  exposed models: gpt-4o, gpt-4o-mini, claude-sonnet-4, claude-haiku-4.5"
+log "  exposed models: dynamic sync from ${BLOCKRUN_API_BASE%/}/v1/models"
 log "  blockrun api: $BLOCKRUN_API_BASE"
 log "  clawcredit: $CLAWCREDIT_BASE_URL ($CLAWCREDIT_CHAIN)"
 log ""
@@ -244,7 +235,8 @@ log ""
 if [[ "$DRY_RUN" == "1" ]]; then
   log "[dry-run] Would run npm install/build in $GATEWAY_DIR"
   log "[dry-run] Would start gateway and wait for $HEALTH_URL"
-  log "[dry-run] Would patch $OPENCLAW_JSON with provider=$PROVIDER_ID baseUrl=$BASE_URL"
+  log "[dry-run] Would fetch upstream models from ${BLOCKRUN_API_BASE%/}/v1/models"
+  log "[dry-run] Would patch $OPENCLAW_JSON with provider=$PROVIDER_ID baseUrl=$BASE_URL and synced model list"
   if [[ "$NO_RESTART" != "1" ]]; then
     log "[dry-run] Would run: ${OPENCLAW_CMD[*]} gateway restart"
   fi
@@ -320,7 +312,7 @@ if [[ "$ready" != "1" ]]; then
 fi
 
 log "→ Patching OpenClaw provider config: $OPENCLAW_JSON"
-node - "$OPENCLAW_JSON" "$PROVIDER_ID" "$BASE_URL" "$MODEL_ID" <<'NODE'
+node - "$OPENCLAW_JSON" "$PROVIDER_ID" "$BASE_URL" "$MODEL_ID" "$BLOCKRUN_API_BASE" "$GATEWAY_DIR/scripts/openclaw-model-sync.cjs" <<'NODE'
 const fs = require("fs");
 const path = require("path");
 
@@ -328,91 +320,65 @@ const configPath = process.argv[2];
 const providerId = process.argv[3];
 const baseUrl = process.argv[4];
 const defaultModelId = process.argv[5];
-const realModels = [
-  {
-    id: "gpt-4o",
-    name: "GPT-4o",
-    api: "openai-completions",
-    reasoning: false,
-    input: ["text", "image"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 128000,
-    maxTokens: 16384,
-  },
-  {
-    id: "gpt-4o-mini",
-    name: "GPT-4o Mini",
-    api: "openai-completions",
-    reasoning: false,
-    input: ["text", "image"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 128000,
-    maxTokens: 16384,
-  },
-  {
-    id: "claude-sonnet-4",
-    name: "Claude Sonnet 4",
-    api: "openai-completions",
-    reasoning: true,
-    input: ["text"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 200000,
-    maxTokens: 8192,
-  },
-  {
-    id: "claude-haiku-4.5",
-    name: "Claude Haiku 4.5",
-    api: "openai-completions",
-    reasoning: false,
-    input: ["text"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 200000,
-    maxTokens: 8192,
-  },
-];
-const hasDefaultModel = realModels.some((m) => m.id === defaultModelId);
-const effectiveDefaultModelId = hasDefaultModel ? defaultModelId : "gpt-4o";
+const blockrunApiBase = process.argv[6];
+const helperPath = process.argv[7];
+const {
+  extractUpstreamModels,
+  buildFallbackModels,
+  syncOpenClawConfig,
+} = require(helperPath);
 
-let config = {};
-if (fs.existsSync(configPath)) {
-  const raw = fs.readFileSync(configPath, "utf8");
-  if (raw.trim()) config = JSON.parse(raw);
-}
-
-config.models ??= {};
-config.models.providers ??= {};
-
-const existing = config.models.providers[providerId];
-let provider = existing ? JSON.parse(JSON.stringify(existing)) : null;
-if (!provider) {
-  provider = { api: "openai-completions" };
-}
-
-provider.baseUrl = baseUrl;
-provider.apiKey = "clawcredit-gateway";
-provider.api = "openai-completions";
-provider.models = realModels;
-
-config.models.providers[providerId] = provider;
-
-config.agents ??= {};
-config.agents.defaults ??= {};
-config.agents.defaults.models ??= {};
-const allowedModels = config.agents.defaults.models;
-if (allowedModels && typeof allowedModels === "object" && !Array.isArray(allowedModels)) {
-  delete allowedModels[`${providerId}/premium`];
-  for (const m of realModels) {
-    const fullId = `${providerId}/${m.id}`;
-    if (!allowedModels[fullId] || typeof allowedModels[fullId] !== "object") {
-      allowedModels[fullId] = {};
+async function fetchModels(apiBase) {
+  const endpoint = `${String(apiBase || "").replace(/\/+$/, "")}/v1/models`;
+  try {
+    const response = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`upstream models status=${response.status}`);
+    const payload = await response.json();
+    const models = extractUpstreamModels(payload);
+    if (!Array.isArray(models) || models.length === 0) {
+      throw new Error("upstream models payload empty");
     }
+    return { models, source: "upstream", endpoint };
+  } catch (err) {
+    return {
+      models: buildFallbackModels(),
+      source: "fallback",
+      endpoint,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
-fs.mkdirSync(path.dirname(configPath), { recursive: true });
-fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-console.log(`updated ${configPath}`);
-console.log(`provider ${providerId} default model: ${effectiveDefaultModelId}`);
+async function main() {
+  let config = {};
+  if (fs.existsSync(configPath)) {
+    const raw = fs.readFileSync(configPath, "utf8");
+    if (raw.trim()) config = JSON.parse(raw);
+  }
+
+  const modelResult = await fetchModels(blockrunApiBase);
+  const { updatedConfig, effectiveDefaultModelId } = syncOpenClawConfig(config, {
+    providerId,
+    baseUrl,
+    requestedDefaultModelId: defaultModelId,
+    models: modelResult.models,
+  });
+
+  fs.mkdirSync(path.dirname(configPath), { recursive: true });
+  fs.writeFileSync(configPath, JSON.stringify(updatedConfig, null, 2));
+  console.log(`updated ${configPath}`);
+  console.log(`provider ${providerId} models synced: ${modelResult.models.length} (${modelResult.source})`);
+  console.log(`provider ${providerId} default model: ${effectiveDefaultModelId}`);
+  if (modelResult.source === "fallback") {
+    console.log(`provider ${providerId} sync warning: ${modelResult.error}`);
+  }
+}
+
+main().catch((err) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  console.error(`failed to patch ${configPath}: ${msg}`);
+  process.exit(1);
+});
 NODE
 
 if [[ "$NO_RESTART" != "1" ]]; then
