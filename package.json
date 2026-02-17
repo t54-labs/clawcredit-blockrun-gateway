@@ -1,12 +1,13 @@
 {
-  "name": "@t54-labs/clawcredit-blockrun-gateway",
+  "name": "@t54-labs/clawcredit-blockrun-sdk",
   "version": "0.1.0",
-  "description": "Standalone OpenAI-compatible gateway for BlockRun inference paid via claw.credit SDK",
+  "description": "SDK and standalone OpenAI-compatible gateway for BlockRun inference paid via claw.credit",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "clawcredit-blockrun-gateway": "./dist/cli.js"
+    "clawcredit-blockrun-gateway": "./dist/cli.js",
+    "clawcredit-blockrun-sdk": "./dist/cli.js"
   },
   "exports": {
     ".": {
@@ -16,6 +17,7 @@
   },
   "files": [
     "dist",
+    "scripts",
     "README.md",
     "LICENSE"
   ],
@@ -29,6 +31,7 @@
   "keywords": [
     "clawcredit",
     "blockrun",
+    "sdk",
     "gateway",
     "openai-compatible",
     "payments"
@@ -38,6 +41,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/t54-labs/clawcredit-blockrun-gateway.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@t54-labs/clawcredit-sdk": "^0.2.40"

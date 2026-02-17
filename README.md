@@ -1,9 +1,12 @@
-# clawcredit-blockrun-gateway
+# @t54-labs/clawcredit-blockrun-sdk
 
-Standalone OpenAI-compatible gateway for **BlockRun inference paid via claw.credit SDK**.
+SDK + standalone OpenAI-compatible gateway for **BlockRun inference paid via claw.credit SDK**.
 
-This service exposes `POST /v1/chat/completions` and routes payment through
-`@t54-labs/clawcredit-sdk`, returning the upstream merchant response in OpenAI-compatible shape.
+This package provides:
+
+- SDK helpers (`createClawCreditFetch`, `startGateway`)
+- a standalone gateway service (`POST /v1/chat/completions`)
+- a setup script for OpenClaw integration
 
 ## Why this exists
 
@@ -23,6 +26,21 @@ export CLAWCREDIT_ASSET=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 
 node dist/cli.js
 # listening on http://127.0.0.1:3402
+```
+
+## SDK usage
+
+```ts
+import { startGateway } from "@t54-labs/clawcredit-blockrun-sdk";
+
+const gateway = await startGateway({
+  port: 3402,
+  clawCredit: {
+    apiToken: process.env.CLAWCREDIT_API_TOKEN!,
+    chain: "BASE",
+    asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  },
+});
 ```
 
 ## OpenClaw one-command setup
