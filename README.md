@@ -1,0 +1,64 @@
+# clawcredit-blockrun-gateway
+
+Standalone OpenAI-compatible gateway for **BlockRun inference paid via claw.credit SDK**.
+
+This service exposes `POST /v1/chat/completions` and routes payment through
+`@t54-labs/clawcredit-sdk`, returning the upstream merchant response in OpenAI-compatible shape.
+
+## Why this exists
+
+- Keep payment integration as a standalone `t54-labs` solution
+- Let `ClawRouter` (or any other client) consume it as a low-coupling backend
+- Standardize on official claw.credit SDK flow
+
+## Quick start
+
+```bash
+npm install
+npm run build
+
+export CLAWCREDIT_API_TOKEN=claw_xxx
+export CLAWCREDIT_CHAIN=BASE
+export CLAWCREDIT_ASSET=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+
+node dist/cli.js
+# listening on http://127.0.0.1:3402
+```
+
+Then call:
+
+```bash
+curl -sS http://127.0.0.1:3402/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model":"blockrun/premium",
+    "messages":[{"role":"user","content":"hi"}],
+    "max_tokens":64
+  }'
+```
+
+## Environment variables
+
+- `CLAWCREDIT_API_TOKEN` (required)
+- `CLAWCREDIT_API_BASE` (default: `https://api.claw.credit`)
+- `CLAWCREDIT_CHAIN` (default: `BASE`)
+- `CLAWCREDIT_ASSET` (default: Base USDC)
+- `CLAWCREDIT_AGENT` (optional)
+- `CLAWCREDIT_AGENT_ID` (optional)
+- `CLAWCREDIT_DEFAULT_AMOUNT_USD` (default: `0.1`)
+- `BLOCKRUN_API_BASE` (default: `https://blockrun.ai/api`)
+- `HOST` (default: `127.0.0.1`)
+- `PORT` / `GATEWAY_PORT` (default: `3402`)
+
+## Endpoints
+
+- `GET /health`
+- `POST /v1/chat/completions`
+
+## Development
+
+```bash
+npm run typecheck
+npm run test
+npm run build
+```
