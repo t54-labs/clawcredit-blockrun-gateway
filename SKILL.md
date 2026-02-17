@@ -1,0 +1,98 @@
+---
+name: openclaw-clawcredit-gateway-setup
+description: Use when setting up OpenClaw to use the local clawcredit-blockrun gateway provider and validating end-to-end claw.credit paid inference.
+---
+
+# OpenClaw ClawCredit Gateway Setup
+
+## Overview
+Use this skill when OpenClaw should route requests through the standalone
+`clawcredit-blockrun-gateway` and pay via claw.credit SDK.
+
+This skill prioritizes:
+- minimal config changes
+- reproducible setup
+- quick health/route verification
+
+## Prerequisites
+- `openclaw` CLI is installed and works.
+- Node.js >= 20 is available.
+- Repo exists locally (`/tmp/clawcredit-blockrun-gateway` by default).
+- User has a valid `CLAWCREDIT_API_TOKEN`.
+
+## Primary Workflow
+1. Preview actions first:
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh --token <token> --dry-run
+```
+
+2. Apply setup:
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh --token <token>
+```
+
+3. Verify gateway health:
+```bash
+curl -sS http://127.0.0.1:3402/health
+```
+Expected: JSON with `"status":"ok"`.
+
+4. Verify OpenClaw model routing:
+```bash
+openclaw models show | rg blockruncc
+```
+Expected provider/model includes `blockruncc/premium`.
+
+5. In chat session, use model:
+```text
+/model blockruncc/premium
+```
+
+## Safety Rules
+- Do not remove or overwrite unrelated providers in `openclaw.json`.
+- Prefer creating/updating provider `blockruncc` only.
+- Use `--profile` when user works in non-default OpenClaw profile.
+
+## Common Variants
+- Custom gateway path:
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh \
+  --token <token> \
+  --gateway-dir /path/to/clawcredit-blockrun-gateway
+```
+
+- Custom profile:
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh \
+  --token <token> \
+  --profile <profile>
+```
+
+- Custom chain/asset:
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh \
+  --token <token> \
+  --chain BASE \
+  --asset 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+```
+
+## Troubleshooting
+- `CLAWCREDIT_API_TOKEN is required`:
+  user must provide `--token`.
+
+- Health check fails:
+  inspect gateway logs:
+```bash
+tail -n 120 /tmp/clawcredit-blockrun-gateway/.run/gateway.log
+```
+
+- OpenClaw still uses old model:
+```bash
+openclaw gateway restart
+openclaw models set blockruncc/premium
+```
+
+## Quick Reference
+- Setup script: `scripts/setup-openclaw-clawcredit-gateway.sh`
+- Health endpoint: `http://127.0.0.1:3402/health`
+- Default provider/model: `blockruncc/premium`
