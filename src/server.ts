@@ -1,5 +1,8 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
+import { randomUUID } from "node:crypto";
 import { createClawCreditFetch, type ClawCreditConfig } from "./clawcredit.js";
 
 export type GatewayOptions = {
@@ -20,7 +23,39 @@ type CompletionRequest = {
   model?: string;
   stream?: boolean;
   max_tokens?: number;
+  messages?: Array<Record<string, unknown>>;
 };
+
+const VALID_ROLES = new Set(["system", "user", "assistant", "tool", "function"]);
+const ROLE_MAPPINGS: Record<string, string> = {
+  developer: "system",
+  model: "assistant",
+};
+
+function normalizeMessageRoles(messages: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  if (messages.length === 0) return messages;
+
+  let hasChanges = false;
+  const normalized = messages.map((msg) => {
+    const role = msg.role;
+    if (typeof role !== "string") {
+      hasChanges = true;
+      return { ...msg, role: "user" };
+    }
+    if (VALID_ROLES.has(role)) return msg;
+
+    const mappedRole = ROLE_MAPPINGS[role];
+    if (mappedRole) {
+      hasChanges = true;
+      return { ...msg, role: mappedRole };
+    }
+
+    hasChanges = true;
+    return { ...msg, role: "user" };
+  });
+
+  return hasChanges ? normalized : messages;
+}
 
 function readBody(req: IncomingMessage): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -53,10 +88,49 @@ function normalizePayloadForGateway(body: Buffer): Buffer {
   try {
     const parsed = JSON.parse(body.toString("utf-8")) as CompletionRequest;
     if (parsed.stream === true) parsed.stream = false;
+    if (Array.isArray(parsed.messages)) {
+      parsed.messages = normalizeMessageRoles(parsed.messages);
+    }
     return Buffer.from(JSON.stringify(parsed));
   } catch {
     return body;
   }
+}
+
+function parseJsonIfPossible(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+function safeHeadersObject(headers: Headers): Record<string, string> {
+  const out: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    out[key] = value;
+  });
+  return out;
+}
+
+function createCaptureWriter() {
+  const enabled =
+    process.env.GATEWAY_CAPTURE === "1" || process.env.GATEWAY_CAPTURE === "true";
+  const file =
+    (process.env.GATEWAY_CAPTURE_FILE || "/tmp/clawcredit-blockrun-gateway/.run/capture.jsonl").trim();
+
+  if (!enabled) {
+    return (_entry: unknown) => {};
+  }
+
+  mkdirSync(dirname(file), { recursive: true });
+  return (entry: unknown) => {
+    try {
+      appendFileSync(file, `${JSON.stringify(entry)}\n`, "utf-8");
+    } catch {
+      // Best-effort debug capture only.
+    }
+  };
 }
 
 export async function startGateway(options: GatewayOptions): Promise<GatewayInstance> {
@@ -67,6 +141,7 @@ export async function startGateway(options: GatewayOptions): Promise<GatewayInst
     ? Number(options.defaultAmountUsd)
     : 0.1;
   const payFetch = createClawCreditFetch(options.clawCredit);
+  const writeCapture = createCaptureWriter();
 
   const server = createServer(async (req, res) => {
     if (req.url === "/health") {
@@ -82,8 +157,11 @@ export async function startGateway(options: GatewayOptions): Promise<GatewayInst
     }
 
     try {
+      const requestId = randomUUID();
+      const startedAt = Date.now();
       const body = await readBody(req);
       const normalized = normalizePayloadForGateway(body);
+      const normalizedText = normalized.toString("utf-8");
       const maxTokens = extractMaxTokens(normalized);
 
       const estimatedMicros = String(
@@ -103,6 +181,21 @@ export async function startGateway(options: GatewayOptions): Promise<GatewayInst
         headers.set("content-type", "application/json");
       }
 
+      writeCapture({
+        kind: "request",
+        requestId,
+        at: new Date().toISOString(),
+        source: {
+          userAgent: req.headers["user-agent"] || null,
+          xOpenClawSession: req.headers["x-openclaw-session-id"] || null,
+        },
+        method: "POST",
+        target: upstreamUrl,
+        estimatedMicros,
+        headers: safeHeadersObject(headers),
+        body: parseJsonIfPossible(normalizedText),
+      });
+
       const upstream = await payFetch(
         upstreamUrl,
         {
@@ -114,12 +207,26 @@ export async function startGateway(options: GatewayOptions): Promise<GatewayInst
       );
 
       const responseBody = await upstream.text();
+      writeCapture({
+        kind: "response",
+        requestId,
+        at: new Date().toISOString(),
+        durationMs: Date.now() - startedAt,
+        status: upstream.status,
+        headers: safeHeadersObject(upstream.headers),
+        body: parseJsonIfPossible(responseBody),
+      });
       res.writeHead(upstream.status, {
         "content-type": upstream.headers.get("content-type") || "application/json",
       });
       res.end(responseBody);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      writeCapture({
+        kind: "error",
+        at: new Date().toISOString(),
+        message: msg,
+      });
       sendJson(res, 502, { error: msg });
     }
   });

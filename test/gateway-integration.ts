@@ -107,7 +107,10 @@ async function run(): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-4o",
-        messages: [{ role: "user", content: "Say hello" }],
+        messages: [
+          { role: "developer", content: "You are a helpful assistant." },
+          { role: "user", content: "Say hello" },
+        ],
         max_tokens: 32,
         stream: true,
       }),
@@ -136,6 +139,9 @@ async function run(): Promise<void> {
       const reqBody = payload.request_body as Record<string, unknown>;
       const http = reqBody.http as Record<string, unknown>;
       const body = reqBody.body as Record<string, unknown>;
+      const messages = Array.isArray(body.messages)
+        ? (body.messages as Array<Record<string, unknown>>)
+        : [];
 
       assert(tx.chain === "BASE", "transaction.chain forwarded");
       assert(tx.asset === BASE_USDC, "transaction.asset forwarded");
@@ -147,6 +153,9 @@ async function run(): Promise<void> {
       );
       assert(http.url === tx.recipient, "request_body.http.url matches transaction.recipient");
       assert(body.stream === false, "stream=true request normalized to stream=false");
+      assert(messages.length === 2, "message array forwarded");
+      assert(messages[0]?.role === "system", "developer role normalized to system");
+      assert(messages[1]?.role === "user", "user role preserved");
     }
   } finally {
     await gateway.close();
