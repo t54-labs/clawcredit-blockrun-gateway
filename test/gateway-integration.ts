@@ -118,13 +118,39 @@ async function run(): Promise<void> {
 
     assert(response.ok, `gateway request succeeded (${response.status})`);
 
-    const json = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
+    const contentType = response.headers.get("content-type") || "";
     assert(
-      (json.choices?.[0]?.message?.content || "").includes("standalone gateway"),
-      "response came from claw.credit merchant_response",
+      contentType.includes("text/event-stream"),
+      "stream=true returns SSE content-type",
     );
+
+    const sseText = await response.text();
+    const dataLines = sseText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("data: "));
+    assert(dataLines.length > 0, "SSE response includes data lines");
+
+    const hasDone = dataLines.some((line) => line === "data: [DONE]");
+    assert(hasDone, "SSE response includes [DONE] terminator");
+
+    const chunkPayloads = dataLines
+      .filter((line) => line !== "data: [DONE]")
+      .map((line) => JSON.parse(line.slice("data: ".length)) as Record<string, unknown>);
+
+    const hasChunkObject = chunkPayloads.some(
+      (payload) => payload.object === "chat.completion.chunk",
+    );
+    assert(hasChunkObject, "SSE payload uses OpenAI chat.completion.chunk objects");
+
+    const streamedText = chunkPayloads
+      .map((payload) => {
+        const choices = payload.choices as Array<Record<string, unknown>> | undefined;
+        const delta = choices?.[0]?.delta as Record<string, unknown> | undefined;
+        return typeof delta?.content === "string" ? delta.content : "";
+      })
+      .join("");
+    assert(streamedText.includes("standalone gateway"), "SSE delta includes model content");
 
     const headers = credit.getLastHeaders();
     assert(

@@ -26,6 +26,34 @@ type CompletionRequest = {
   messages?: Array<Record<string, unknown>>;
 };
 
+type NormalizedGatewayRequest = {
+  body: Buffer;
+  requestedStream: boolean;
+};
+
+type CompletionResponseChoice = {
+  index?: number;
+  message?: {
+    role?: string;
+    content?: string;
+    tool_calls?: unknown[];
+  };
+  delta?: {
+    role?: string;
+    content?: string;
+    tool_calls?: unknown[];
+  };
+  finish_reason?: string | null;
+};
+
+type CompletionResponse = {
+  id?: string;
+  object?: string;
+  created?: number;
+  model?: string;
+  choices?: CompletionResponseChoice[];
+};
+
 const VALID_ROLES = new Set(["system", "user", "assistant", "tool", "function"]);
 const ROLE_MAPPINGS: Record<string, string> = {
   developer: "system",
@@ -84,17 +112,93 @@ function extractMaxTokens(body: Buffer): number {
   }
 }
 
-function normalizePayloadForGateway(body: Buffer): Buffer {
+function normalizePayloadForGateway(body: Buffer): NormalizedGatewayRequest {
   try {
     const parsed = JSON.parse(body.toString("utf-8")) as CompletionRequest;
+    const requestedStream = parsed.stream === true;
     if (parsed.stream === true) parsed.stream = false;
     if (Array.isArray(parsed.messages)) {
       parsed.messages = normalizeMessageRoles(parsed.messages);
     }
-    return Buffer.from(JSON.stringify(parsed));
+    return { body: Buffer.from(JSON.stringify(parsed)), requestedStream };
   } catch {
-    return body;
+    return { body, requestedStream: false };
   }
+}
+
+function convertJsonCompletionToSseBody(responseBody: string): string {
+  let payload: CompletionResponse | null = null;
+  try {
+    payload = JSON.parse(responseBody) as CompletionResponse;
+  } catch {
+    payload = null;
+  }
+
+  if (!payload || !Array.isArray(payload.choices) || payload.choices.length === 0) {
+    return `data: ${responseBody}\n\ndata: [DONE]\n\n`;
+  }
+
+  const created = payload.created ?? Math.floor(Date.now() / 1000);
+  const baseChunk = {
+    id: payload.id ?? `chatcmpl-${Date.now()}`,
+    object: "chat.completion.chunk",
+    created,
+    model: payload.model ?? "unknown",
+    system_fingerprint: null,
+  };
+
+  const out: string[] = [];
+  for (const choice of payload.choices) {
+    const index = Number.isFinite(choice.index) ? Number(choice.index) : 0;
+    const role = choice.message?.role ?? choice.delta?.role ?? "assistant";
+    const content = choice.message?.content ?? choice.delta?.content ?? "";
+    const toolCalls = choice.message?.tool_calls ?? choice.delta?.tool_calls;
+
+    out.push(
+      `data: ${JSON.stringify({
+        ...baseChunk,
+        choices: [{ index, delta: { role }, logprobs: null, finish_reason: null }],
+      })}\n\n`,
+    );
+
+    if (typeof content === "string" && content.length > 0) {
+      out.push(
+        `data: ${JSON.stringify({
+          ...baseChunk,
+          choices: [{ index, delta: { content }, logprobs: null, finish_reason: null }],
+        })}\n\n`,
+      );
+    }
+
+    if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+      out.push(
+        `data: ${JSON.stringify({
+          ...baseChunk,
+          choices: [{ index, delta: { tool_calls: toolCalls }, logprobs: null, finish_reason: null }],
+        })}\n\n`,
+      );
+    }
+
+    out.push(
+      `data: ${JSON.stringify({
+        ...baseChunk,
+        choices: [
+          {
+            index,
+            delta: {},
+            logprobs: null,
+            finish_reason:
+              Array.isArray(toolCalls) && toolCalls.length > 0
+                ? "tool_calls"
+                : (choice.finish_reason ?? "stop"),
+          },
+        ],
+      })}\n\n`,
+    );
+  }
+
+  out.push("data: [DONE]\n\n");
+  return out.join("");
 }
 
 function parseJsonIfPossible(text: string): unknown {
@@ -160,7 +264,9 @@ export async function startGateway(options: GatewayOptions): Promise<GatewayInst
       const requestId = randomUUID();
       const startedAt = Date.now();
       const body = await readBody(req);
-      const normalized = normalizePayloadForGateway(body);
+      const normalizedReq = normalizePayloadForGateway(body);
+      const normalized = normalizedReq.body;
+      const requestedStream = normalizedReq.requestedStream;
       const normalizedText = normalized.toString("utf-8");
       const maxTokens = extractMaxTokens(normalized);
 
@@ -216,6 +322,17 @@ export async function startGateway(options: GatewayOptions): Promise<GatewayInst
         headers: safeHeadersObject(upstream.headers),
         body: parseJsonIfPossible(responseBody),
       });
+      if (requestedStream && upstream.ok) {
+        const sseBody = convertJsonCompletionToSseBody(responseBody);
+        res.writeHead(200, {
+          "content-type": "text/event-stream",
+          "cache-control": "no-cache",
+          connection: "keep-alive",
+        });
+        res.end(sseBody);
+        return;
+      }
+
       res.writeHead(upstream.status, {
         "content-type": upstream.headers.get("content-type") || "application/json",
       });
