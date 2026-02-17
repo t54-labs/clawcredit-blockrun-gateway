@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { startGateway } from "./server.js";
 
-const DEFAULT_BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const DEFAULT_ASSET = "USDC";
 
 function required(name: string): string {
   const value = (process.env[name] || "").trim();
@@ -23,7 +23,7 @@ async function main(): Promise<void> {
     baseUrl: (process.env.CLAWCREDIT_API_BASE || "https://api.claw.credit").trim(),
     apiToken: required("CLAWCREDIT_API_TOKEN"),
     chain: (process.env.CLAWCREDIT_CHAIN || "BASE").trim(),
-    asset: (process.env.CLAWCREDIT_ASSET || DEFAULT_BASE_USDC).trim(),
+    asset: (process.env.CLAWCREDIT_ASSET || DEFAULT_ASSET).trim(),
     agent: (process.env.CLAWCREDIT_AGENT || "").trim() || undefined,
     agentId: (process.env.CLAWCREDIT_AGENT_ID || "").trim() || undefined,
   };

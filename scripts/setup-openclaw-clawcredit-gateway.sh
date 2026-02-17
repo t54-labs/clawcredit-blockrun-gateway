@@ -4,12 +4,12 @@ set -euo pipefail
 DEFAULT_GATEWAY_DIR="/tmp/clawcredit-blockrun-gateway"
 DEFAULT_PORT="3402"
 DEFAULT_PROVIDER_ID="blockruncc"
-DEFAULT_MODEL_ID="premium"
+DEFAULT_MODEL_ID="gpt-4o"
 DEFAULT_HOST="127.0.0.1"
 DEFAULT_BLOCKRUN_API_BASE="https://blockrun.ai/api"
 DEFAULT_CLAWCREDIT_BASE_URL="https://api.claw.credit"
 DEFAULT_CHAIN="BASE"
-DEFAULT_ASSET_BASE_USDC="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+DEFAULT_ASSET_BASE_USDC="USDC"
 DEFAULT_AMOUNT_USD="0.1"
 
 usage() {
@@ -31,13 +31,13 @@ Options:
   --port <port>           Gateway port (default: 3402)
   --host <host>           Gateway host bind (default: 127.0.0.1)
   --provider <id>         OpenClaw provider id (default: blockruncc)
-  --model <id>            Model id to set active (default: premium)
+  --model <id>            Model id to set active (default: gpt-4o)
   --profile <name>        OpenClaw profile for CLI commands
   --state-dir <path>      OpenClaw state dir override
   --blockrun-api <url>    BLOCKRUN_API_BASE (default: https://blockrun.ai/api)
   --cc-base-url <url>     CLAWCREDIT_API_BASE (default: https://api.claw.credit)
   --chain <name>          CLAWCREDIT_CHAIN (default: BASE)
-  --asset <addr>          CLAWCREDIT_ASSET (default: Base USDC on BASE)
+  --asset <value>         CLAWCREDIT_ASSET (default: USDC on BASE)
   --amount-usd <num>      CLAWCREDIT_DEFAULT_AMOUNT_USD (default: 0.1)
   --no-model-set          Skip `openclaw models set`
   --no-restart            Skip `openclaw gateway restart`
@@ -206,6 +206,15 @@ if [[ -z "$CLAWCREDIT_ASSET" ]]; then
   fi
 fi
 
+case "$MODEL_ID" in
+  gpt-4o|gpt-4o-mini|claude-sonnet-4|claude-haiku-4.5)
+    ;;
+  *)
+    warn "Unsupported model '$MODEL_ID'; falling back to '$DEFAULT_MODEL_ID'"
+    MODEL_ID="$DEFAULT_MODEL_ID"
+    ;;
+esac
+
 STATE_DIR="$(resolve_state_dir "$OPENCLAW_STATE_DIR_ARG" "$OPENCLAW_PROFILE")"
 OPENCLAW_JSON="$STATE_DIR/openclaw.json"
 
@@ -227,6 +236,7 @@ log "  gateway dir: $GATEWAY_DIR"
 log "  gateway listen: ${HOST}:${PORT}"
 log "  OpenClaw state dir: $STATE_DIR"
 log "  provider/model: ${PROVIDER_ID}/${MODEL_ID}"
+log "  exposed models: gpt-4o, gpt-4o-mini, claude-sonnet-4, claude-haiku-4.5"
 log "  blockrun api: $BLOCKRUN_API_BASE"
 log "  clawcredit: $CLAWCREDIT_BASE_URL ($CLAWCREDIT_CHAIN)"
 log ""
@@ -318,6 +328,50 @@ const configPath = process.argv[2];
 const providerId = process.argv[3];
 const baseUrl = process.argv[4];
 const defaultModelId = process.argv[5];
+const realModels = [
+  {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    api: "openai-completions",
+    reasoning: false,
+    input: ["text", "image"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 128000,
+    maxTokens: 16384,
+  },
+  {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    api: "openai-completions",
+    reasoning: false,
+    input: ["text", "image"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 128000,
+    maxTokens: 16384,
+  },
+  {
+    id: "claude-sonnet-4",
+    name: "Claude Sonnet 4",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 200000,
+    maxTokens: 8192,
+  },
+  {
+    id: "claude-haiku-4.5",
+    name: "Claude Haiku 4.5",
+    api: "openai-completions",
+    reasoning: false,
+    input: ["text"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 200000,
+    maxTokens: 8192,
+  },
+];
+const hasDefaultModel = realModels.some((m) => m.id === defaultModelId);
+const effectiveDefaultModelId = hasDefaultModel ? defaultModelId : "gpt-4o";
 
 let config = {};
 if (fs.existsSync(configPath)) {
@@ -329,51 +383,36 @@ config.models ??= {};
 config.models.providers ??= {};
 
 const existing = config.models.providers[providerId];
-const blockrun = config.models.providers.blockrun;
 let provider = existing ? JSON.parse(JSON.stringify(existing)) : null;
-if (!provider && blockrun) {
-  provider = JSON.parse(JSON.stringify(blockrun));
-}
 if (!provider) {
-  provider = {
-    api: "openai-completions",
-    models: [
-      {
-        id: defaultModelId,
-        name: defaultModelId,
-        api: "openai-completions",
-        reasoning: false,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 200000,
-        maxTokens: 64000,
-      },
-    ],
-  };
+  provider = { api: "openai-completions" };
 }
 
 provider.baseUrl = baseUrl;
 provider.apiKey = "clawcredit-gateway";
 provider.api = "openai-completions";
-provider.models = Array.isArray(provider.models) ? provider.models : [];
-if (!provider.models.some((m) => m && typeof m.id === "string" && m.id === defaultModelId)) {
-  provider.models.push({
-    id: defaultModelId,
-    name: defaultModelId,
-    api: "openai-completions",
-    reasoning: false,
-    input: ["text"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 200000,
-    maxTokens: 64000,
-  });
-}
+provider.models = realModels;
 
 config.models.providers[providerId] = provider;
+
+config.agents ??= {};
+config.agents.defaults ??= {};
+config.agents.defaults.models ??= {};
+const allowedModels = config.agents.defaults.models;
+if (allowedModels && typeof allowedModels === "object" && !Array.isArray(allowedModels)) {
+  delete allowedModels[`${providerId}/premium`];
+  for (const m of realModels) {
+    const fullId = `${providerId}/${m.id}`;
+    if (!allowedModels[fullId] || typeof allowedModels[fullId] !== "object") {
+      allowedModels[fullId] = {};
+    }
+  }
+}
 
 fs.mkdirSync(path.dirname(configPath), { recursive: true });
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 console.log(`updated ${configPath}`);
+console.log(`provider ${providerId} default model: ${effectiveDefaultModelId}`);
 NODE
 
 if [[ "$NO_RESTART" != "1" ]]; then

@@ -22,7 +22,7 @@ npm run build
 
 export CLAWCREDIT_API_TOKEN=claw_xxx
 export CLAWCREDIT_CHAIN=BASE
-export CLAWCREDIT_ASSET=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+export CLAWCREDIT_ASSET=USDC
 
 node dist/cli.js
 # listening on http://127.0.0.1:3402
@@ -38,7 +38,7 @@ const gateway = await startGateway({
   clawCredit: {
     apiToken: process.env.CLAWCREDIT_API_TOKEN!,
     chain: "BASE",
-    asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    asset: "USDC",
   },
 });
 ```
@@ -55,8 +55,9 @@ This will:
 
 - build/start the standalone gateway in background
 - patch OpenClaw provider config (`blockruncc` -> `http://127.0.0.1:3402/v1`)
+- expose only real upstream model IDs (`gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4`, `claude-haiku-4.5`)
 - restart OpenClaw gateway
-- set active model to `blockruncc/premium`
+- set active model to `blockruncc/gpt-4o` (default)
 
 Dry-run first:
 
@@ -70,7 +71,7 @@ Then call:
 curl -sS http://127.0.0.1:3402/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
-    "model":"blockrun/premium",
+    "model":"gpt-4o",
     "messages":[{"role":"user","content":"hi"}],
     "max_tokens":64
   }'
@@ -81,13 +82,22 @@ curl -sS http://127.0.0.1:3402/v1/chat/completions \
 - `CLAWCREDIT_API_TOKEN` (required)
 - `CLAWCREDIT_API_BASE` (default: `https://api.claw.credit`)
 - `CLAWCREDIT_CHAIN` (default: `BASE`)
-- `CLAWCREDIT_ASSET` (default: Base USDC)
+- `CLAWCREDIT_ASSET` (default: `USDC` on BASE)
 - `CLAWCREDIT_AGENT` (optional)
 - `CLAWCREDIT_AGENT_ID` (optional)
 - `CLAWCREDIT_DEFAULT_AMOUNT_USD` (default: `0.1`)
 - `BLOCKRUN_API_BASE` (default: `https://blockrun.ai/api`)
 - `HOST` (default: `127.0.0.1`)
 - `PORT` / `GATEWAY_PORT` (default: `3402`)
+
+## Supported models
+
+This gateway intentionally exposes only real upstream model IDs (no meta models):
+
+- `gpt-4o`
+- `gpt-4o-mini`
+- `claude-sonnet-4`
+- `claude-haiku-4.5`
 
 ## Endpoints
 

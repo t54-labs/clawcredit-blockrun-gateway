@@ -106,7 +106,7 @@ async function run(): Promise<void> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "blockrun/premium",
+        model: "gpt-4o",
         messages: [{ role: "user", content: "Say hello" }],
         max_tokens: 32,
         stream: true,

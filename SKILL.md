@@ -41,11 +41,11 @@ Expected: JSON with `"status":"ok"`.
 ```bash
 openclaw models show | rg blockruncc
 ```
-Expected provider/model includes `blockruncc/premium`.
+Expected provider/model includes real IDs like `blockruncc/gpt-4o`.
 
 5. In chat session, use model:
 ```text
-/model blockruncc/premium
+/model blockruncc/gpt-4o
 ```
 
 ## Safety Rules
@@ -73,7 +73,7 @@ bash scripts/setup-openclaw-clawcredit-gateway.sh \
 bash scripts/setup-openclaw-clawcredit-gateway.sh \
   --token <token> \
   --chain BASE \
-  --asset 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+  --asset USDC
 ```
 
 ## Troubleshooting
@@ -89,10 +89,11 @@ tail -n 120 /tmp/clawcredit-blockrun-gateway/.run/gateway.log
 - OpenClaw still uses old model:
 ```bash
 openclaw gateway restart
-openclaw models set blockruncc/premium
+openclaw models set blockruncc/gpt-4o
 ```
 
 ## Quick Reference
 - Setup script: `scripts/setup-openclaw-clawcredit-gateway.sh`
 - Health endpoint: `http://127.0.0.1:3402/health`
-- Default provider/model: `blockruncc/premium`
+- Default provider/model: `blockruncc/gpt-4o`
+- Supported models: `gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4`, `claude-haiku-4.5`
