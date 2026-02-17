@@ -25,6 +25,27 @@ node dist/cli.js
 # listening on http://127.0.0.1:3402
 ```
 
+## OpenClaw one-command setup
+
+Use the helper script to wire this gateway into OpenClaw as a standalone provider:
+
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh --token claw_xxx
+```
+
+This will:
+
+- build/start the standalone gateway in background
+- patch OpenClaw provider config (`blockruncc` -> `http://127.0.0.1:3402/v1`)
+- restart OpenClaw gateway
+- set active model to `blockruncc/premium`
+
+Dry-run first:
+
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh --token claw_xxx --dry-run
+```
+
 Then call:
 
 ```bash
