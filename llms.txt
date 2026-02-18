@@ -1,0 +1,105 @@
+# t54-labs/clawcredit-blockrun-gateway
+
+> Standalone OpenAI-compatible gateway and SDK helpers for BlockRun inference paid via claw.credit.
+
+## Overview
+
+This repository provides:
+
+- a local gateway that exposes OpenAI-style chat completions
+- payment routing through `@t54-labs/clawcredit-sdk`
+- OpenClaw integration scripts that sync real BlockRun model IDs
+
+Primary package: `@t54-labs/clawcredit-blockrun-sdk`
+
+## Hard Prerequisite
+
+Before paid calls can succeed, the agent must be registered with ClawCredit and have valid credit/token state.
+
+- Official registration/usage skill: `https://www.claw.credit/SKILL.md`
+- Privacy policy: `https://www.claw.credit/privacy`
+
+Expected token input for this gateway:
+
+- `CLAWCREDIT_API_TOKEN=claw_xxx`
+
+## API Surface
+
+- `GET /health`
+  - Returns service status
+- `POST /v1/chat/completions`
+  - OpenAI-compatible chat completion endpoint
+  - Upstream target: `BLOCKRUN_API_BASE/v1/chat/completions`
+
+## Runtime Behavior
+
+- Uses real upstream model IDs (no synthetic meta-model alias required)
+- Normalizes request payload for compatibility before forwarding
+- Supports OpenAI-style streaming output (`text/event-stream`) to clients
+- Uses fixed outbound user-agent format:
+  - `clawcredit-blockrun-gateway/<version>`
+
+## Quick Start
+
+```bash
+npm install
+npm run build
+
+export CLAWCREDIT_API_TOKEN=claw_xxx
+export CLAWCREDIT_CHAIN=BASE
+export CLAWCREDIT_ASSET=USDC
+
+node dist/cli.js
+```
+
+Health check:
+
+```bash
+curl -sS http://127.0.0.1:3402/health
+```
+
+## OpenClaw Setup
+
+Recommended setup script:
+
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh --token claw_xxx
+```
+
+Script responsibilities:
+
+- starts local gateway
+- syncs models from `https://blockrun.ai/api/v1/models`
+- updates OpenClaw provider config (`blockruncc`)
+- restarts OpenClaw gateway
+
+## Environment Variables
+
+- `CLAWCREDIT_API_TOKEN` (required)
+- `CLAWCREDIT_API_BASE` (default: `https://api.claw.credit`)
+- `CLAWCREDIT_CHAIN` (default: `BASE`)
+- `CLAWCREDIT_ASSET` (default: `USDC`)
+- `CLAWCREDIT_AGENT` (optional)
+- `CLAWCREDIT_AGENT_ID` (optional)
+- `CLAWCREDIT_DEFAULT_AMOUNT_USD` (default: `0.1`)
+- `BLOCKRUN_API_BASE` (default: `https://blockrun.ai/api`)
+- `HOST` (default: `127.0.0.1`)
+- `PORT` or `GATEWAY_PORT` (default: `3402`)
+
+## Key Files
+
+- `src/server.ts` - HTTP gateway, request normalization, SSE conversion
+- `src/clawcredit.ts` - payment adapter via claw.credit SDK
+- `src/version.ts` - version + fixed user-agent source
+- `scripts/setup-openclaw-clawcredit-gateway.sh` - OpenClaw setup automation
+- `scripts/openclaw-model-sync.cjs` - model sync and OpenClaw config patching
+- `SKILL.md` - local AI skill for OpenClaw gateway setup
+- `README.md` - human-focused usage and troubleshooting guide
+
+## Development Commands
+
+```bash
+npm run typecheck
+npm test
+npm run build
+```
