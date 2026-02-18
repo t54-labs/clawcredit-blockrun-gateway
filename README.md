@@ -7,6 +7,8 @@
 
 Standalone OpenAI-compatible gateway and SDK helpers to run BlockRun inference paid through `claw.credit`.
 
+**Requires Node.js >= 20.**
+
 ## Scope boundary (important)
 
 - This project is a **BlockRun inference payment gateway**.
@@ -60,6 +62,14 @@ If registration/pre-qualification is not ready, payment calls can fail with `403
 
 ## Install and run
 
+### As a dependency
+
+```bash
+npm install @t54-labs/clawcredit-blockrun-sdk
+```
+
+### From source
+
 ```bash
 npm install
 npm run build
@@ -71,6 +81,8 @@ export CLAWCREDIT_ASSET=USDC
 node dist/cli.js
 # listening on http://127.0.0.1:3402
 ```
+
+After a global install (`npm install -g @t54-labs/clawcredit-blockrun-sdk`), the CLI is also available as `clawcredit-blockrun-gateway`.
 
 Quick health check:
 
@@ -172,11 +184,10 @@ curl -sS "${BLOCKRUN_API_BASE:-https://blockrun.ai/api}/v1/models" \
 - `402 Payment Required`
   - Credit/repayment state blocks payment (check dashboard + repayment status).
 
-Useful checks:
+Useful check:
 
 ```bash
 openclaw providers check-health
-curl -sS http://127.0.0.1:3402/health
 ```
 
 ## Development
@@ -185,6 +196,12 @@ curl -sS http://127.0.0.1:3402/health
 npm run typecheck
 npm run test
 npm run build
+```
+
+Or run the CLI in watch mode during development:
+
+```bash
+npm run dev
 ```
 
 ## Contributing and security
