@@ -131,18 +131,36 @@ Recommended order: finish official ClawCredit registration flow first, then run 
 - The gateway exposes real upstream model IDs from `BLOCKRUN_API_BASE/v1/models`.
 - No synthetic "meta model" alias is required.
 - OpenClaw-facing model names are `blockruncc/<upstream-model-id>`.
+- Model availability changes over time; this README does not maintain a full static list.
 
-Example:
+Examples (non-exhaustive):
 
-- `blockruncc/openai/gpt-4o`
-- `blockruncc/anthropic/claude-sonnet-4`
-- `blockruncc/anthropic/claude-opus-4.5`
-- `blockruncc/moonshot/kimi-k2.5`
+- `blockruncc/anthropic/claude-sonnet-4.6`
+- `blockruncc/anthropic/claude-opus-4.6`
+- `blockruncc/openai/gpt-5.2`
+- `blockruncc/minimax/minimax-m2.5`
+- `blockruncc/nvidia/gpt-oss-120b` (currently `input=0`, `output=0`)
+- `blockruncc/nvidia/kimi-k2.5`
 
-List current synced models:
+Price-based guidance (as of 2026-02-18 from `https://blockrun.ai/api/v1/models`):
+
+- Lowest cost / experimentation: `nvidia/gpt-oss-120b` (`input=0`, `output=0`)
+- Budget paid option: `minimax/minimax-m2.5` (`input=0.3`, `output=1.2`)
+- Balanced option: `nvidia/kimi-k2.5` (`input=0.6`, `output=3`)
+- Higher capability tier: `openai/gpt-5.2` (`input=1.75`, `output=14`)
+- Premium tier: `anthropic/claude-sonnet-4.6` (`input=3`, `output=15`) and `anthropic/claude-opus-4.6` (`input=5`, `output=25`)
+
+Get the current full model list (recommended):
 
 ```bash
 openclaw models show | rg '^  blockruncc/'
+```
+
+Get upstream model IDs and pricing directly from BlockRun:
+
+```bash
+curl -sS "${BLOCKRUN_API_BASE:-https://blockrun.ai/api}/v1/models" \
+  | jq -r '.data[] | "\(.id)\tinput=\(.pricing.input // 0)\toutput=\(.pricing.output // 0)"'
 ```
 
 ## Troubleshooting
