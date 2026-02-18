@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a reproducible bug in gateway, setup script, or SDK behavior
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please include minimal reproduction and logs with secrets removed.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+      placeholder: Describe the bug briefly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Exact commands/config used.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and payload hints (sanitized)
+      description: Include gateway/OpenClaw/HTTP status details without tokens.
+      render: shell
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: "e.g. @t54-labs/clawcredit-blockrun-sdk@0.1.5"
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: "e.g. v20.19.0"
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "e.g. macOS 15 / Ubuntu 24.04"
