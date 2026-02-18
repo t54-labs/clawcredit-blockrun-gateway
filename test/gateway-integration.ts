@@ -1,8 +1,16 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { AddressInfo } from "node:net";
 import { startGateway } from "../src/server.js";
 
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
+const pkg = require(join(__dirname, "..", "package.json")) as { version: string };
+const EXPECTED_USER_AGENT = `clawcredit-blockrun-gateway/${pkg.version}`;
 
 let passed = 0;
 let failed = 0;
@@ -164,6 +172,7 @@ async function run(): Promise<void> {
       const tx = payload.transaction as Record<string, unknown>;
       const reqBody = payload.request_body as Record<string, unknown>;
       const http = reqBody.http as Record<string, unknown>;
+      const httpHeaders = (http.headers ?? {}) as Record<string, unknown>;
       const body = reqBody.body as Record<string, unknown>;
       const messages = Array.isArray(body.messages)
         ? (body.messages as Array<Record<string, unknown>>)
@@ -178,6 +187,10 @@ async function run(): Promise<void> {
         "transaction.recipient points to BlockRun chat endpoint",
       );
       assert(http.url === tx.recipient, "request_body.http.url matches transaction.recipient");
+      assert(
+        httpHeaders["user-agent"] === EXPECTED_USER_AGENT,
+        "request_body.http.headers.user-agent uses clawcredit-blockrun-gateway/<version>",
+      );
       assert(body.stream === false, "stream=true request normalized to stream=false");
       assert(messages.length === 2, "message array forwarded");
       assert(messages[0]?.role === "system", "developer role normalized to system");

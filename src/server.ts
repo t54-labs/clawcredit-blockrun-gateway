@@ -4,6 +4,7 @@ import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { createClawCreditFetch, type ClawCreditConfig } from "./clawcredit.js";
+import { USER_AGENT } from "./version.js";
 
 export type GatewayOptions = {
   port?: number;
@@ -286,6 +287,7 @@ export async function startGateway(options: GatewayOptions): Promise<GatewayInst
       if (!headers.has("content-type")) {
         headers.set("content-type", "application/json");
       }
+      headers.set("user-agent", USER_AGENT);
 
       writeCapture({
         kind: "request",
