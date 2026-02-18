@@ -12,6 +12,12 @@ This repository provides:
 
 Primary package: `@t54-labs/clawcredit-blockrun-sdk`
 
+## Scope Boundary
+
+- This gateway is for BlockRun inference payment only.
+- It is not a general x402 payment relay/proxy for arbitrary services.
+- Expected paid upstream target: `BLOCKRUN_API_BASE/v1/chat/completions` (BlockRun).
+
 ## Hard Prerequisite
 
 Before paid calls can succeed, the agent must be registered with ClawCredit and have valid credit/token state.

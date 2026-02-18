@@ -9,6 +9,10 @@ description: Use when setting up OpenClaw to use the local clawcredit-blockrun g
 Use this skill when OpenClaw should route requests through the standalone
 `clawcredit-blockrun-gateway` and pay via claw.credit SDK.
 
+Important scope boundary:
+- This setup is only for BlockRun inference (`/v1/chat/completions`).
+- Do not treat this gateway as a generic x402 payment proxy for arbitrary endpoints.
+
 This skill prioritizes:
 - minimal config changes
 - reproducible setup
@@ -55,6 +59,7 @@ Expected provider/model includes real IDs like
 - Do not remove or overwrite unrelated providers in `openclaw.json`.
 - Prefer creating/updating provider `blockruncc` only.
 - Use `--profile` when user works in non-default OpenClaw profile.
+- Keep `BLOCKRUN_API_BASE` pointed to BlockRun (`https://blockrun.ai/api` by default), not localhost.
 
 ## Common Variants
 - Custom gateway path:
@@ -93,6 +98,12 @@ tail -n 120 /tmp/clawcredit-blockrun-gateway/.run/gateway.log
 ```bash
 openclaw gateway restart
 openclaw models set blockruncc/anthropic/claude-sonnet-4
+```
+
+- Payment recipient unexpectedly shows localhost (`127.0.0.1`):
+  your `BLOCKRUN_API_BASE` is likely misconfigured. Re-run setup with:
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh --token <token> --blockrun-api https://blockrun.ai/api
 ```
 
 ## Quick Reference

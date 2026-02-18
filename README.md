@@ -7,6 +7,13 @@
 
 Standalone OpenAI-compatible gateway and SDK helpers to run BlockRun inference paid through `claw.credit`.
 
+## Scope boundary (important)
+
+- This project is a **BlockRun inference payment gateway**.
+- It is **not** a general-purpose x402 payment proxy for arbitrary merchant endpoints.
+- Intended upstream target is BlockRun chat completions:  
+  `https://blockrun.ai/api/v1/chat/completions` (or your configured `BLOCKRUN_API_BASE` equivalent).
+
 ## What this repo provides
 
 - SDK helpers: `createClawCreditFetch`, `startGateway`
