@@ -17,7 +17,7 @@ This skill prioritizes:
 ## Prerequisites
 - `openclaw` CLI is installed and works.
 - Node.js >= 20 is available.
-- Repo exists locally (`/tmp/clawcredit-blockrun-gateway` by default).
+- Repo exists locally (default: parent directory of this skill/script repository).
 - User has a valid `CLAWCREDIT_API_TOKEN`.
 - If the user does not have ClawCredit credentials yet, they must register first.
 - Registration source of truth: `https://www.claw.credit/SKILL.md` (includes required consent + registration flow).
