@@ -19,6 +19,8 @@ This skill prioritizes:
 - Node.js >= 20 is available.
 - Repo exists locally (`/tmp/clawcredit-blockrun-gateway` by default).
 - User has a valid `CLAWCREDIT_API_TOKEN`.
+- If the user does not have ClawCredit credentials yet, they must register first.
+- Registration source of truth: `https://www.claw.credit/SKILL.md` (includes required consent + registration flow).
 
 ## Primary Workflow
 1. Preview actions first:
@@ -79,7 +81,7 @@ bash scripts/setup-openclaw-clawcredit-gateway.sh \
 
 ## Troubleshooting
 - `CLAWCREDIT_API_TOKEN is required`:
-  user must provide `--token`.
+  user must provide `--token`. If they are not registered yet, complete registration first via `https://www.claw.credit/SKILL.md`.
 
 - Health check fails:
   inspect gateway logs:
