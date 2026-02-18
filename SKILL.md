@@ -44,11 +44,11 @@ Expected: JSON with `"status":"ok"`.
 openclaw models show | rg blockruncc
 ```
 Expected provider/model includes real IDs like
-`blockruncc/openai/gpt-4o` and `blockruncc/anthropic/claude-opus-4.5`.
+`blockruncc/anthropic/claude-sonnet-4` and `blockruncc/anthropic/claude-opus-4.5`.
 
 5. In chat session, use model:
 ```text
-/model blockruncc/openai/gpt-4o
+/model blockruncc/anthropic/claude-sonnet-4
 ```
 
 ## Safety Rules
@@ -92,11 +92,11 @@ tail -n 120 /tmp/clawcredit-blockrun-gateway/.run/gateway.log
 - OpenClaw still uses old model:
 ```bash
 openclaw gateway restart
-openclaw models set blockruncc/openai/gpt-4o
+openclaw models set blockruncc/anthropic/claude-sonnet-4
 ```
 
 ## Quick Reference
 - Setup script: `scripts/setup-openclaw-clawcredit-gateway.sh`
-- Health endpoint: `http://127.0.0.1:3402/health`
-- Default provider/model: `blockruncc/openai/gpt-4o`
+- Default health endpoint: `http://127.0.0.1:3402/health` (changes if `--host`/`--port` is overridden)
+- Default provider/model: `blockruncc/anthropic/claude-sonnet-4`
 - Supported models: dynamically synced from `BLOCKRUN_API_BASE/v1/models`

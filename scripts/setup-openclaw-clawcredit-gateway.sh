@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DEFAULT_GATEWAY_DIR="$(cd -- "${SCRIPT_DIR}/.." >/dev/null 2>&1 && pwd)"
 DEFAULT_PORT="3402"
 DEFAULT_PROVIDER_ID="blockruncc"
-DEFAULT_MODEL_ID="anthropic/claude-opus-4.5"
+DEFAULT_MODEL_ID="anthropic/claude-sonnet-4"
 DEFAULT_HOST="127.0.0.1"
 DEFAULT_BLOCKRUN_API_BASE="https://blockrun.ai/api"
 DEFAULT_CLAWCREDIT_BASE_URL="https://api.claw.credit"
@@ -32,7 +32,7 @@ Options:
   --port <port>           Gateway port (default: 3402)
   --host <host>           Gateway host bind (default: 127.0.0.1)
   --provider <id>         OpenClaw provider id (default: blockruncc)
-  --model <id>            Model id to set active (default: anthropic/claude-opus-4.5)
+  --model <id>            Model id to set active (default: anthropic/claude-sonnet-4)
   --profile <name>        OpenClaw profile for CLI commands
   --state-dir <path>      OpenClaw state dir override
   --blockrun-api <url>    BLOCKRUN_API_BASE (default: https://blockrun.ai/api)

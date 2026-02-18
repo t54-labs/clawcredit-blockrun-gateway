@@ -83,7 +83,7 @@ This script will:
 2. Sync real model IDs from `https://blockrun.ai/api/v1/models`.
 3. Patch OpenClaw provider `blockruncc -> http://127.0.0.1:3402/v1`.
 4. Restart OpenClaw gateway.
-5. Set default model to `blockruncc/openai/gpt-4o`.
+5. Set default model to `blockruncc/anthropic/claude-sonnet-4`.
 
 Dry run:
 
@@ -128,6 +128,7 @@ Recommended order: finish official ClawCredit registration flow first, then run 
 Example:
 
 - `blockruncc/openai/gpt-4o`
+- `blockruncc/anthropic/claude-sonnet-4`
 - `blockruncc/anthropic/claude-opus-4.5`
 - `blockruncc/moonshot/kimi-k2.5`
 
