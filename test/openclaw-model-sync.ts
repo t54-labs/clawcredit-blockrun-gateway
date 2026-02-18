@@ -2,18 +2,29 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
+type SyncedModel = {
+  id: string;
+  cost: {
+    input: number;
+    output: number;
+    cacheRead: number;
+    cacheWrite: number;
+  };
+  [key: string]: unknown;
+};
+
 const {
   extractUpstreamModels,
   syncOpenClawConfig,
 } = require("../scripts/openclaw-model-sync.cjs") as {
-  extractUpstreamModels: (payload: unknown) => Array<Record<string, unknown>>;
+  extractUpstreamModels: (payload: unknown) => SyncedModel[];
   syncOpenClawConfig: (
     config: Record<string, unknown>,
     options: {
       providerId: string;
       baseUrl: string;
       requestedDefaultModelId: string;
-      models: Array<Record<string, unknown>>;
+      models: SyncedModel[];
     },
   ) => { updatedConfig: Record<string, unknown>; effectiveDefaultModelId: string };
 };
