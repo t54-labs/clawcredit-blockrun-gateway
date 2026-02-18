@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEFAULT_GATEWAY_DIR="/tmp/clawcredit-blockrun-gateway"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+DEFAULT_GATEWAY_DIR="$(cd -- "${SCRIPT_DIR}/.." >/dev/null 2>&1 && pwd)"
 DEFAULT_PORT="3402"
 DEFAULT_PROVIDER_ID="blockruncc"
 DEFAULT_MODEL_ID="anthropic/claude-opus-4.5"
@@ -27,7 +28,7 @@ Usage:
 
 Options:
   --token <token>         Required CLAWCREDIT_API_TOKEN
-  --gateway-dir <path>    Gateway repo dir (default: /tmp/clawcredit-blockrun-gateway)
+  --gateway-dir <path>    Gateway repo dir (default: parent directory of this script)
   --port <port>           Gateway port (default: 3402)
   --host <host>           Gateway host bind (default: 127.0.0.1)
   --provider <id>         OpenClaw provider id (default: blockruncc)
