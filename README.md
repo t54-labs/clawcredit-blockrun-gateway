@@ -82,6 +82,16 @@ node dist/cli.js
 # listening on http://127.0.0.1:3402
 ```
 
+XRPL (x402 + RLUSD) variant:
+
+```bash
+export CLAWCREDIT_API_TOKEN=claw_xxx
+export BLOCKRUN_API_BASE=https://xrpl.blockrun.ai/api
+export CLAWCREDIT_CHAIN=XRPL
+# CLAWCREDIT_ASSET defaults to RLUSD for XRPL if unset
+node dist/cli.js
+```
+
 After a global install (`npm install -g @t54-labs/clawcredit-blockrun-sdk`), the CLI is also available as `clawcredit-blockrun-gateway`.
 
 Quick health check:
@@ -96,10 +106,20 @@ curl -sS http://127.0.0.1:3402/health
 bash scripts/setup-openclaw-clawcredit-gateway.sh --token claw_xxx
 ```
 
+For XRPL onboarding:
+
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh \
+  --token claw_xxx \
+  --chain XRPL
+```
+
+`--blockrun-api` is optional here. If omitted with `--chain XRPL`, the setup script defaults upstream to `https://xrpl.blockrun.ai/api`.
+
 This script will:
 
 1. Build/start the gateway in background.
-2. Sync real model IDs from `https://blockrun.ai/api/v1/models`.
+2. Sync real model IDs from `BLOCKRUN_API_BASE/v1/models`.
 3. Patch OpenClaw provider `blockruncc -> http://127.0.0.1:3402/v1`.
 4. Restart OpenClaw gateway.
 5. Set default model to `blockruncc/anthropic/claude-sonnet-4`.
@@ -130,11 +150,11 @@ Recommended order: finish official ClawCredit registration flow first, then run 
 | `CLAWCREDIT_API_TOKEN` | Yes | - | ClawCredit API token used for payment calls |
 | `CLAWCREDIT_API_BASE` | No | `https://api.claw.credit` | ClawCredit API base URL |
 | `CLAWCREDIT_CHAIN` | No | `BASE` | Settlement chain for payment |
-| `CLAWCREDIT_ASSET` | No | `USDC` | Settlement asset |
+| `CLAWCREDIT_ASSET` | No | `USDC` (`RLUSD` when `CLAWCREDIT_CHAIN=XRPL`) | Settlement asset |
 | `CLAWCREDIT_AGENT` | No | - | Optional agent name |
 | `CLAWCREDIT_AGENT_ID` | No | - | Optional agent ID |
 | `CLAWCREDIT_DEFAULT_AMOUNT_USD` | No | `0.1` | Baseline estimate for payment request |
-| `BLOCKRUN_API_BASE` | No | `https://blockrun.ai/api` | Upstream BlockRun API base |
+| `BLOCKRUN_API_BASE` | No | `https://blockrun.ai/api` (auto `https://xrpl.blockrun.ai/api` when `CLAWCREDIT_CHAIN=XRPL` and unset) | Upstream BlockRun API base |
 | `HOST` | No | `127.0.0.1` | Gateway bind host |
 | `PORT` / `GATEWAY_PORT` | No | `3402` | Gateway bind port |
 
@@ -144,6 +164,10 @@ Recommended order: finish official ClawCredit registration flow first, then run 
 - No synthetic "meta model" alias is required.
 - OpenClaw-facing model names are `blockruncc/<upstream-model-id>`.
 - Model availability changes over time; this README does not maintain a full static list.
+- Model coverage is network-dependent (e.g. Base and XRPL can return different model counts).
+- Price metadata source is network-dependent:
+  - As of 2026-02-20, `https://blockrun.ai/api/v1/models` includes `pricing`.
+  - As of 2026-02-20, `https://xrpl.blockrun.ai/api/v1/models` does not include `pricing`; effective price is returned during `402 Payment Required`.
 
 Examples (non-exhaustive):
 

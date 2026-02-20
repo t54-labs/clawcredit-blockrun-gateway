@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { startGateway } from "./server.js";
-
-const DEFAULT_ASSET = "USDC";
+import { resolveBlockrunApiBase, resolveChainAssetDefaults } from "./payment-defaults.js";
 
 function required(name: string): string {
   const value = (process.env[name] || "").trim();
@@ -14,16 +13,21 @@ function required(name: string): string {
 async function main(): Promise<void> {
   const port = Number(process.env.PORT || process.env.GATEWAY_PORT || 3402);
   const host = (process.env.HOST || "127.0.0.1").trim();
-  const blockrunApiBase =
-    (process.env.BLOCKRUN_API_BASE || "https://blockrun.ai/api").trim() ||
-    "https://blockrun.ai/api";
   const defaultAmountUsd = Number(process.env.CLAWCREDIT_DEFAULT_AMOUNT_USD || 0.1);
+  const chainAndAsset = resolveChainAssetDefaults({
+    chain: process.env.CLAWCREDIT_CHAIN,
+    asset: process.env.CLAWCREDIT_ASSET,
+  });
+  const blockrunApiBase = resolveBlockrunApiBase({
+    chain: chainAndAsset.chain,
+    blockrunApiBase: process.env.BLOCKRUN_API_BASE,
+  });
 
   const clawCredit = {
     baseUrl: (process.env.CLAWCREDIT_API_BASE || "https://api.claw.credit").trim(),
     apiToken: required("CLAWCREDIT_API_TOKEN"),
-    chain: (process.env.CLAWCREDIT_CHAIN || "BASE").trim(),
-    asset: (process.env.CLAWCREDIT_ASSET || DEFAULT_ASSET).trim(),
+    chain: chainAndAsset.chain,
+    asset: chainAndAsset.asset,
     agent: (process.env.CLAWCREDIT_AGENT || "").trim() || undefined,
     agentId: (process.env.CLAWCREDIT_AGENT_ID || "").trim() || undefined,
   };
