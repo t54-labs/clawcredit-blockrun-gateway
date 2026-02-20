@@ -46,7 +46,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@t54-labs/clawcredit-sdk": "^0.2.40"
+    "@t54-labs/clawcredit-sdk": "^0.2.42"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",

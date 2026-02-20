@@ -92,6 +92,16 @@ export CLAWCREDIT_CHAIN=BASE
 node dist/cli.js
 ```
 
+XRPL (x402 + RLUSD) variant:
+
+```bash
+export CLAWCREDIT_API_TOKEN=claw_xxx
+export BLOCKRUN_API_BASE=https://xrpl.blockrun.ai/api
+export CLAWCREDIT_CHAIN=XRPL
+# CLAWCREDIT_ASSET defaults to RLUSD for XRPL if unset
+node dist/cli.js
+```
+
 After a global install (`npm install -g @t54-labs/clawcredit-blockrun-sdk`), the CLI is also available as `clawcredit-blockrun-gateway`.
 
 Quick health check:
@@ -115,6 +125,16 @@ bash scripts/setup-openclaw-clawcredit-gateway.sh \
 ```
 
 `--blockrun-api` is optional here. If omitted with `--chain BASE`, the setup script defaults upstream to `https://blockrun.ai/api`.
+
+For XRPL onboarding:
+
+```bash
+bash scripts/setup-openclaw-clawcredit-gateway.sh \
+  --token claw_xxx \
+  --chain XRPL
+```
+
+`--blockrun-api` is optional here. If omitted with `--chain XRPL`, the setup script defaults upstream to `https://xrpl.blockrun.ai/api`.
 
 This script will:
 
