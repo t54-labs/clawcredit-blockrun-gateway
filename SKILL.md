@@ -31,7 +31,8 @@ This skill prioritizes:
 - **Base / USDC**
   - `--blockrun-api https://blockrun.ai/api --chain BASE --asset USDC`
 - **XRPL / RLUSD**
-  - `--blockrun-api https://xrpl.blockrun.ai/api --chain XRPL --asset RLUSD`
+  - `--chain XRPL` (auto-uses `https://xrpl.blockrun.ai/api` if `--blockrun-api` is not set)
+  - optional explicit form: `--blockrun-api https://xrpl.blockrun.ai/api --chain XRPL --asset RLUSD`
 
 2. Preview actions first:
 ```bash
@@ -66,7 +67,7 @@ Model coverage is chain-dependent (`blockrun.ai` and `xrpl.blockrun.ai` do not e
 - Do not remove or overwrite unrelated providers in `openclaw.json`.
 - Prefer creating/updating provider `blockruncc` only.
 - Use `--profile` when user works in non-default OpenClaw profile.
-- Keep `BLOCKRUN_API_BASE` pointed to BlockRun (`https://blockrun.ai/api` by default), not localhost.
+- Keep `BLOCKRUN_API_BASE` pointed to a BlockRun endpoint (`https://blockrun.ai/api` or `https://xrpl.blockrun.ai/api`), not localhost.
 
 ## Common Variants
 - Custom gateway path:
@@ -95,7 +96,6 @@ bash scripts/setup-openclaw-clawcredit-gateway.sh \
 ```bash
 bash scripts/setup-openclaw-clawcredit-gateway.sh \
   --token <token> \
-  --blockrun-api https://xrpl.blockrun.ai/api \
   --chain XRPL
 ```
 

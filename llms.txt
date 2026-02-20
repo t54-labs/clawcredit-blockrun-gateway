@@ -92,7 +92,7 @@ Script responsibilities:
 Onboarding order:
 
 1. Choose network first (`BASE/USDC` or `XRPL/RLUSD`)
-2. Point `BLOCKRUN_API_BASE` to the matching endpoint
+2. Point `BLOCKRUN_API_BASE` to the matching endpoint (or leave unset for `XRPL` to auto-use `https://xrpl.blockrun.ai/api`)
 3. Then choose model from that network's synced model list
 
 ## Environment Variables
@@ -104,7 +104,7 @@ Onboarding order:
 - `CLAWCREDIT_AGENT` (optional)
 - `CLAWCREDIT_AGENT_ID` (optional)
 - `CLAWCREDIT_DEFAULT_AMOUNT_USD` (default: `0.1`)
-- `BLOCKRUN_API_BASE` (default: `https://blockrun.ai/api`)
+- `BLOCKRUN_API_BASE` (default: `https://blockrun.ai/api`; auto-switches to `https://xrpl.blockrun.ai/api` when `CLAWCREDIT_CHAIN=XRPL` and unset)
 - `HOST` (default: `127.0.0.1`)
 - `PORT` or `GATEWAY_PORT` (default: `3402`)
 

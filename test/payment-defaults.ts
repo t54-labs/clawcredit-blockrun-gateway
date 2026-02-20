@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { resolveChainAssetDefaults } from "../src/payment-defaults.js";
+import { resolveBlockrunApiBase, resolveChainAssetDefaults } from "../src/payment-defaults.js";
 
 let passed = 0;
 let failed = 0;
@@ -39,6 +39,28 @@ function testExplicitAssetWins(): void {
   check(result.asset === "CUSTOM_ASSET", "keeps explicit asset value");
 }
 
+function testXrplDefaultsToXrplBlockrunApi(): void {
+  const result = resolveBlockrunApiBase({
+    chain: "XRPL",
+  });
+  check(result === "https://xrpl.blockrun.ai/api", "defaults XRPL endpoint to xrpl.blockrun.ai");
+}
+
+function testBaseDefaultsToBaseBlockrunApi(): void {
+  const result = resolveBlockrunApiBase({
+    chain: "BASE",
+  });
+  check(result === "https://blockrun.ai/api", "defaults BASE endpoint to blockrun.ai");
+}
+
+function testExplicitBlockrunApiWins(): void {
+  const result = resolveBlockrunApiBase({
+    chain: "XRPL",
+    blockrunApiBase: "https://custom.blockrun.example/api",
+  });
+  check(result === "https://custom.blockrun.example/api", "keeps explicit BLOCKRUN_API_BASE value");
+}
+
 function run(): void {
   console.log("\n═══ Chain/Asset Defaults Test ═══\n");
 
@@ -46,6 +68,9 @@ function run(): void {
     testBaseDefaultsToUsdc();
     testXrplDefaultsToRlusd();
     testExplicitAssetWins();
+    testXrplDefaultsToXrplBlockrunApi();
+    testBaseDefaultsToBaseBlockrunApi();
+    testExplicitBlockrunApiWins();
   } catch (err) {
     console.error(err);
     failed++;

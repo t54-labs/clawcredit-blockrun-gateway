@@ -111,14 +111,15 @@ For XRPL onboarding:
 ```bash
 bash scripts/setup-openclaw-clawcredit-gateway.sh \
   --token claw_xxx \
-  --blockrun-api https://xrpl.blockrun.ai/api \
   --chain XRPL
 ```
+
+`--blockrun-api` is optional here. If omitted with `--chain XRPL`, the setup script defaults upstream to `https://xrpl.blockrun.ai/api`.
 
 This script will:
 
 1. Build/start the gateway in background.
-2. Sync real model IDs from `https://blockrun.ai/api/v1/models`.
+2. Sync real model IDs from `BLOCKRUN_API_BASE/v1/models`.
 3. Patch OpenClaw provider `blockruncc -> http://127.0.0.1:3402/v1`.
 4. Restart OpenClaw gateway.
 5. Set default model to `blockruncc/anthropic/claude-sonnet-4`.
@@ -153,7 +154,7 @@ Recommended order: finish official ClawCredit registration flow first, then run 
 | `CLAWCREDIT_AGENT` | No | - | Optional agent name |
 | `CLAWCREDIT_AGENT_ID` | No | - | Optional agent ID |
 | `CLAWCREDIT_DEFAULT_AMOUNT_USD` | No | `0.1` | Baseline estimate for payment request |
-| `BLOCKRUN_API_BASE` | No | `https://blockrun.ai/api` | Upstream BlockRun API base |
+| `BLOCKRUN_API_BASE` | No | `https://blockrun.ai/api` (auto `https://xrpl.blockrun.ai/api` when `CLAWCREDIT_CHAIN=XRPL` and unset) | Upstream BlockRun API base |
 | `HOST` | No | `127.0.0.1` | Gateway bind host |
 | `PORT` / `GATEWAY_PORT` | No | `3402` | Gateway bind port |
 
