@@ -75,20 +75,20 @@ npm install
 npm run build
 
 export CLAWCREDIT_API_TOKEN=claw_xxx
-export CLAWCREDIT_CHAIN=BASE
-export CLAWCREDIT_ASSET=USDC
+# CLAWCREDIT_CHAIN defaults to XRPL
+# CLAWCREDIT_ASSET defaults to RLUSD on XRPL
 
 node dist/cli.js
 # listening on http://127.0.0.1:3402
 ```
 
-XRPL (x402 + RLUSD) variant:
+BASE (USDC) variant:
 
 ```bash
 export CLAWCREDIT_API_TOKEN=claw_xxx
-export BLOCKRUN_API_BASE=https://xrpl.blockrun.ai/api
-export CLAWCREDIT_CHAIN=XRPL
-# CLAWCREDIT_ASSET defaults to RLUSD for XRPL if unset
+export BLOCKRUN_API_BASE=https://blockrun.ai/api
+export CLAWCREDIT_CHAIN=BASE
+# CLAWCREDIT_ASSET defaults to USDC for BASE if unset
 node dist/cli.js
 ```
 
@@ -106,15 +106,15 @@ curl -sS http://127.0.0.1:3402/health
 bash scripts/setup-openclaw-clawcredit-gateway.sh --token claw_xxx
 ```
 
-For XRPL onboarding:
+For BASE onboarding:
 
 ```bash
 bash scripts/setup-openclaw-clawcredit-gateway.sh \
   --token claw_xxx \
-  --chain XRPL
+  --chain BASE
 ```
 
-`--blockrun-api` is optional here. If omitted with `--chain XRPL`, the setup script defaults upstream to `https://xrpl.blockrun.ai/api`.
+`--blockrun-api` is optional here. If omitted with `--chain BASE`, the setup script defaults upstream to `https://blockrun.ai/api`.
 
 This script will:
 
@@ -149,12 +149,12 @@ Recommended order: finish official ClawCredit registration flow first, then run 
 |---|---|---|---|
 | `CLAWCREDIT_API_TOKEN` | Yes | - | ClawCredit API token used for payment calls |
 | `CLAWCREDIT_API_BASE` | No | `https://api.claw.credit` | ClawCredit API base URL |
-| `CLAWCREDIT_CHAIN` | No | `BASE` | Settlement chain for payment |
-| `CLAWCREDIT_ASSET` | No | `USDC` (`RLUSD` when `CLAWCREDIT_CHAIN=XRPL`) | Settlement asset |
+| `CLAWCREDIT_CHAIN` | No | `XRPL` | Settlement chain for payment |
+| `CLAWCREDIT_ASSET` | No | `RLUSD` (`USDC` when `CLAWCREDIT_CHAIN=BASE`) | Settlement asset |
 | `CLAWCREDIT_AGENT` | No | - | Optional agent name |
 | `CLAWCREDIT_AGENT_ID` | No | - | Optional agent ID |
 | `CLAWCREDIT_DEFAULT_AMOUNT_USD` | No | `0.1` | Baseline estimate for payment request |
-| `BLOCKRUN_API_BASE` | No | `https://blockrun.ai/api` (auto `https://xrpl.blockrun.ai/api` when `CLAWCREDIT_CHAIN=XRPL` and unset) | Upstream BlockRun API base |
+| `BLOCKRUN_API_BASE` | No | `https://xrpl.blockrun.ai/api` (auto `https://blockrun.ai/api` when `CLAWCREDIT_CHAIN=BASE` and unset) | Upstream BlockRun API base |
 | `HOST` | No | `127.0.0.1` | Gateway bind host |
 | `PORT` / `GATEWAY_PORT` | No | `3402` | Gateway bind port |
 

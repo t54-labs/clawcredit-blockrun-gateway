@@ -52,19 +52,19 @@ npm install
 npm run build
 
 export CLAWCREDIT_API_TOKEN=claw_xxx
-export CLAWCREDIT_CHAIN=BASE
-export CLAWCREDIT_ASSET=USDC
+# CLAWCREDIT_CHAIN defaults to XRPL
+# CLAWCREDIT_ASSET defaults to RLUSD on XRPL
 
 node dist/cli.js
 ```
 
-XRPL x402/RLUSD variant:
+BASE/USDC variant:
 
 ```bash
 export CLAWCREDIT_API_TOKEN=claw_xxx
-export BLOCKRUN_API_BASE=https://xrpl.blockrun.ai/api
-export CLAWCREDIT_CHAIN=XRPL
-# CLAWCREDIT_ASSET defaults to RLUSD for XRPL if unset
+export BLOCKRUN_API_BASE=https://blockrun.ai/api
+export CLAWCREDIT_CHAIN=BASE
+# CLAWCREDIT_ASSET defaults to USDC for BASE if unset
 node dist/cli.js
 ```
 
@@ -92,19 +92,19 @@ Script responsibilities:
 Onboarding order:
 
 1. Choose network first (`BASE/USDC` or `XRPL/RLUSD`)
-2. Point `BLOCKRUN_API_BASE` to the matching endpoint (or leave unset for `XRPL` to auto-use `https://xrpl.blockrun.ai/api`)
+2. Point `BLOCKRUN_API_BASE` to the matching endpoint (or leave unset to auto-select by `CLAWCREDIT_CHAIN`)
 3. Then choose model from that network's synced model list
 
 ## Environment Variables
 
 - `CLAWCREDIT_API_TOKEN` (required)
 - `CLAWCREDIT_API_BASE` (default: `https://api.claw.credit`)
-- `CLAWCREDIT_CHAIN` (default: `BASE`)
-- `CLAWCREDIT_ASSET` (default: `USDC`; defaults to `RLUSD` when `CLAWCREDIT_CHAIN=XRPL`)
+- `CLAWCREDIT_CHAIN` (default: `XRPL`)
+- `CLAWCREDIT_ASSET` (default: `RLUSD`; defaults to `USDC` when `CLAWCREDIT_CHAIN=BASE`)
 - `CLAWCREDIT_AGENT` (optional)
 - `CLAWCREDIT_AGENT_ID` (optional)
 - `CLAWCREDIT_DEFAULT_AMOUNT_USD` (default: `0.1`)
-- `BLOCKRUN_API_BASE` (default: `https://blockrun.ai/api`; auto-switches to `https://xrpl.blockrun.ai/api` when `CLAWCREDIT_CHAIN=XRPL` and unset)
+- `BLOCKRUN_API_BASE` (default: `https://xrpl.blockrun.ai/api`; auto-switches to `https://blockrun.ai/api` when `CLAWCREDIT_CHAIN=BASE` and unset)
 - `HOST` (default: `127.0.0.1`)
 - `PORT` or `GATEWAY_PORT` (default: `3402`)
 

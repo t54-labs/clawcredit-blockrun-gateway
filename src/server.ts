@@ -4,6 +4,7 @@ import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { createClawCreditFetch, type ClawCreditConfig } from "./clawcredit.js";
+import { resolveBlockrunApiBase } from "./payment-defaults.js";
 import { USER_AGENT } from "./version.js";
 
 export type GatewayOptions = {
@@ -241,7 +242,10 @@ function createCaptureWriter() {
 export async function startGateway(options: GatewayOptions): Promise<GatewayInstance> {
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 3402;
-  const apiBase = (options.blockrunApiBase ?? "https://blockrun.ai/api").replace(/\/+$/, "");
+  const apiBase = resolveBlockrunApiBase({
+    chain: options.clawCredit.chain,
+    blockrunApiBase: options.blockrunApiBase,
+  }).replace(/\/+$/, "");
   const defaultAmountUsd = Number.isFinite(options.defaultAmountUsd)
     ? Number(options.defaultAmountUsd)
     : 0.1;

@@ -23,6 +23,12 @@ function testBaseDefaultsToUsdc(): void {
   check(result.asset === "USDC", "defaults BASE asset to USDC");
 }
 
+function testImplicitDefaultsToXrplRlusd(): void {
+  const result = resolveChainAssetDefaults({});
+  check(result.chain === "XRPL", "defaults chain to XRPL when unset");
+  check(result.asset === "RLUSD", "defaults implicit asset to RLUSD");
+}
+
 function testXrplDefaultsToRlusd(): void {
   const result = resolveChainAssetDefaults({
     chain: "xrpl",
@@ -46,6 +52,11 @@ function testXrplDefaultsToXrplBlockrunApi(): void {
   check(result === "https://xrpl.blockrun.ai/api", "defaults XRPL endpoint to xrpl.blockrun.ai");
 }
 
+function testImplicitDefaultsToXrplBlockrunApi(): void {
+  const result = resolveBlockrunApiBase({});
+  check(result === "https://xrpl.blockrun.ai/api", "defaults implicit endpoint to xrpl.blockrun.ai");
+}
+
 function testBaseDefaultsToBaseBlockrunApi(): void {
   const result = resolveBlockrunApiBase({
     chain: "BASE",
@@ -66,9 +77,11 @@ function run(): void {
 
   try {
     testBaseDefaultsToUsdc();
+    testImplicitDefaultsToXrplRlusd();
     testXrplDefaultsToRlusd();
     testExplicitAssetWins();
     testXrplDefaultsToXrplBlockrunApi();
+    testImplicitDefaultsToXrplBlockrunApi();
     testBaseDefaultsToBaseBlockrunApi();
     testExplicitBlockrunApiWins();
   } catch (err) {
