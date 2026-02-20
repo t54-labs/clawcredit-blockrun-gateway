@@ -11,6 +11,7 @@ DEFAULT_BLOCKRUN_API_BASE="https://blockrun.ai/api"
 DEFAULT_CLAWCREDIT_BASE_URL="https://api.claw.credit"
 DEFAULT_CHAIN="BASE"
 DEFAULT_ASSET_BASE_USDC="USDC"
+DEFAULT_ASSET_XRPL_RLUSD="RLUSD"
 DEFAULT_AMOUNT_USD="0.1"
 
 usage() {
@@ -38,7 +39,7 @@ Options:
   --blockrun-api <url>    BLOCKRUN_API_BASE (default: https://blockrun.ai/api)
   --cc-base-url <url>     CLAWCREDIT_API_BASE (default: https://api.claw.credit)
   --chain <name>          CLAWCREDIT_CHAIN (default: BASE)
-  --asset <value>         CLAWCREDIT_ASSET (default: USDC on BASE)
+  --asset <value>         CLAWCREDIT_ASSET (default: USDC on BASE, RLUSD on XRPL)
   --amount-usd <num>      CLAWCREDIT_DEFAULT_AMOUNT_USD (default: 0.1)
   --no-model-set          Skip `openclaw models set`
   --no-restart            Skip `openclaw gateway restart`
@@ -200,11 +201,17 @@ need_cmd openclaw
 
 CLAWCREDIT_CHAIN="$(printf '%s' "$CLAWCREDIT_CHAIN" | tr '[:lower:]' '[:upper:]')"
 if [[ -z "$CLAWCREDIT_ASSET" ]]; then
-  if [[ "$CLAWCREDIT_CHAIN" == "BASE" ]]; then
-    CLAWCREDIT_ASSET="$DEFAULT_ASSET_BASE_USDC"
-  else
-    die "--asset is required for chain=$CLAWCREDIT_CHAIN"
-  fi
+  case "$CLAWCREDIT_CHAIN" in
+    BASE)
+      CLAWCREDIT_ASSET="$DEFAULT_ASSET_BASE_USDC"
+      ;;
+    XRPL)
+      CLAWCREDIT_ASSET="$DEFAULT_ASSET_XRPL_RLUSD"
+      ;;
+    *)
+      die "--asset is required for chain=$CLAWCREDIT_CHAIN"
+      ;;
+  esac
 fi
 
 STATE_DIR="$(resolve_state_dir "$OPENCLAW_STATE_DIR_ARG" "$OPENCLAW_PROFILE")"

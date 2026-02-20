@@ -58,6 +58,16 @@ export CLAWCREDIT_ASSET=USDC
 node dist/cli.js
 ```
 
+XRPL x402/RLUSD variant:
+
+```bash
+export CLAWCREDIT_API_TOKEN=claw_xxx
+export BLOCKRUN_API_BASE=https://xrpl.blockrun.ai/api
+export CLAWCREDIT_CHAIN=XRPL
+# CLAWCREDIT_ASSET defaults to RLUSD for XRPL if unset
+node dist/cli.js
+```
+
 Health check:
 
 ```bash
@@ -75,16 +85,22 @@ bash scripts/setup-openclaw-clawcredit-gateway.sh --token claw_xxx
 Script responsibilities:
 
 - starts local gateway
-- syncs models from `https://blockrun.ai/api/v1/models`
+- syncs models from `BLOCKRUN_API_BASE/v1/models`
 - updates OpenClaw provider config (`blockruncc`)
 - restarts OpenClaw gateway
+
+Onboarding order:
+
+1. Choose network first (`BASE/USDC` or `XRPL/RLUSD`)
+2. Point `BLOCKRUN_API_BASE` to the matching endpoint
+3. Then choose model from that network's synced model list
 
 ## Environment Variables
 
 - `CLAWCREDIT_API_TOKEN` (required)
 - `CLAWCREDIT_API_BASE` (default: `https://api.claw.credit`)
 - `CLAWCREDIT_CHAIN` (default: `BASE`)
-- `CLAWCREDIT_ASSET` (default: `USDC`)
+- `CLAWCREDIT_ASSET` (default: `USDC`; defaults to `RLUSD` when `CLAWCREDIT_CHAIN=XRPL`)
 - `CLAWCREDIT_AGENT` (optional)
 - `CLAWCREDIT_AGENT_ID` (optional)
 - `CLAWCREDIT_DEFAULT_AMOUNT_USD` (default: `0.1`)
