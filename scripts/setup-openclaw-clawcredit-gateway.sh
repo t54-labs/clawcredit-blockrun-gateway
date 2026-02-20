@@ -7,10 +7,11 @@ DEFAULT_PORT="3402"
 DEFAULT_PROVIDER_ID="blockruncc"
 DEFAULT_MODEL_ID="anthropic/claude-sonnet-4"
 DEFAULT_HOST="127.0.0.1"
-DEFAULT_BLOCKRUN_API_BASE="https://blockrun.ai/api"
+DEFAULT_BLOCKRUN_API_BASE="https://xrpl.blockrun.ai/api"
+DEFAULT_BLOCKRUN_API_BASE_BASE="https://blockrun.ai/api"
 DEFAULT_BLOCKRUN_API_BASE_XRPL="https://xrpl.blockrun.ai/api"
 DEFAULT_CLAWCREDIT_BASE_URL="https://api.claw.credit"
-DEFAULT_CHAIN="BASE"
+DEFAULT_CHAIN="XRPL"
 DEFAULT_ASSET_BASE_USDC="USDC"
 DEFAULT_ASSET_XRPL_RLUSD="RLUSD"
 DEFAULT_AMOUNT_USD="0.1"
@@ -37,10 +38,10 @@ Options:
   --model <id>            Model id to set active (default: anthropic/claude-sonnet-4)
   --profile <name>        OpenClaw profile for CLI commands
   --state-dir <path>      OpenClaw state dir override
-  --blockrun-api <url>    BLOCKRUN_API_BASE (default: https://blockrun.ai/api; auto-switches to XRPL endpoint when --chain XRPL and unset)
+  --blockrun-api <url>    BLOCKRUN_API_BASE (default: https://xrpl.blockrun.ai/api; auto-switches by --chain when unset)
   --cc-base-url <url>     CLAWCREDIT_API_BASE (default: https://api.claw.credit)
-  --chain <name>          CLAWCREDIT_CHAIN (default: BASE)
-  --asset <value>         CLAWCREDIT_ASSET (default: USDC on BASE, RLUSD on XRPL)
+  --chain <name>          CLAWCREDIT_CHAIN (default: XRPL)
+  --asset <value>         CLAWCREDIT_ASSET (default: RLUSD on XRPL, USDC on BASE)
   --amount-usd <num>      CLAWCREDIT_DEFAULT_AMOUNT_USD (default: 0.1)
   --no-model-set          Skip `openclaw models set`
   --no-restart            Skip `openclaw gateway restart`
@@ -222,8 +223,15 @@ if [[ -z "$CLAWCREDIT_ASSET" ]]; then
   esac
 fi
 
-if [[ "$BLOCKRUN_API_BASE_EXPLICIT" != "1" ]] && [[ "$CLAWCREDIT_CHAIN" == "XRPL" ]]; then
-  BLOCKRUN_API_BASE="$DEFAULT_BLOCKRUN_API_BASE_XRPL"
+if [[ "$BLOCKRUN_API_BASE_EXPLICIT" != "1" ]]; then
+  case "$CLAWCREDIT_CHAIN" in
+    BASE)
+      BLOCKRUN_API_BASE="$DEFAULT_BLOCKRUN_API_BASE_BASE"
+      ;;
+    XRPL)
+      BLOCKRUN_API_BASE="$DEFAULT_BLOCKRUN_API_BASE_XRPL"
+      ;;
+  esac
 fi
 
 STATE_DIR="$(resolve_state_dir "$OPENCLAW_STATE_DIR_ARG" "$OPENCLAW_PROFILE")"

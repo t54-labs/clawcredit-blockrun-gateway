@@ -1,13 +1,13 @@
-const DEFAULT_CHAIN = "BASE";
-const DEFAULT_ASSET = "USDC";
-const DEFAULT_BLOCKRUN_API_BASE = "https://blockrun.ai/api";
+const DEFAULT_CHAIN = "XRPL";
+const DEFAULT_ASSET = "RLUSD";
+const DEFAULT_BLOCKRUN_API_BASE = "https://xrpl.blockrun.ai/api";
 const CHAIN_ASSET_DEFAULTS: Record<string, string> = {
   BASE: "USDC",
   XRPL: "RLUSD",
 };
 const CHAIN_BLOCKRUN_API_DEFAULTS: Record<string, string> = {
-  BASE: DEFAULT_BLOCKRUN_API_BASE,
-  XRPL: "https://xrpl.blockrun.ai/api",
+  BASE: "https://blockrun.ai/api",
+  XRPL: DEFAULT_BLOCKRUN_API_BASE,
 };
 
 export type ChainAssetDefaultsInput = {

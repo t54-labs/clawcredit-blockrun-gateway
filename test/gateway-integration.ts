@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { AddressInfo } from "node:net";
 import { startGateway } from "../src/server.js";
 
-const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const XRPL_RLUSD = "RLUSD";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const require = createRequire(import.meta.url);
@@ -96,12 +96,11 @@ async function run(): Promise<void> {
   const credit = await startMockClawCreditServer();
   const gateway = await startGateway({
     port: 0,
-    blockrunApiBase: "https://blockrun.ai/api",
     clawCredit: {
       baseUrl: `http://127.0.0.1:${credit.port}`,
       apiToken: "claw_test_token",
-      chain: "BASE",
-      asset: BASE_USDC,
+      chain: "XRPL",
+      asset: XRPL_RLUSD,
     },
     defaultAmountUsd: 0.1,
   });
@@ -178,13 +177,18 @@ async function run(): Promise<void> {
         ? (body.messages as Array<Record<string, unknown>>)
         : [];
 
-      assert(tx.chain === "BASE", "transaction.chain forwarded");
-      assert(tx.asset === BASE_USDC, "transaction.asset forwarded");
+      assert(tx.chain === "XRPL", "transaction.chain forwarded");
+      assert(tx.asset === XRPL_RLUSD, "transaction.asset forwarded");
       assert(typeof tx.amount === "number" && (tx.amount as number) > 0, "transaction.amount > 0");
       assert(
         typeof tx.recipient === "string" &&
           (tx.recipient as string).endsWith("/v1/chat/completions"),
         "transaction.recipient points to BlockRun chat endpoint",
+      );
+      assert(
+        typeof tx.recipient === "string" &&
+          (tx.recipient as string).startsWith("https://xrpl.blockrun.ai/api/"),
+        "transaction.recipient defaults to XRPL BlockRun endpoint when unset",
       );
       assert(http.url === tx.recipient, "request_body.http.url matches transaction.recipient");
       assert(
